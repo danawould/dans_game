@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Dan's Daily Quest ✨</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(80px) rotate(360deg);opacity:0}}
+@keyframes unlockPop{0%{transform:scale(0.8);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes shimmer{0%,100%{opacity:1}50%{opacity:0.7}}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+body {
+  font-family:'Nunito',sans-serif;
+  background:#4facfe;
+  min-height:100vh;
+  min-height:100dvh;
+  overscroll-behavior:none;
+}
+
+.app {
+  max-width:440px;
+  margin:0 auto;
+  padding-top: max(env(safe-area-inset-top), 48px);
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+  min-height:100vh;
+  min-height:100dvh;
+  transition:background 0.5s ease;
+  position:relative;
+  overflow:hidden;
+}
+.app::before{
+  content:'';position:absolute;inset:0;
+  pointer-events:none;z-index:0;
+  opacity:1;
+}
+.app>*{position:relative;z-index:1}
+
+.header{text-align:center;padding:0.5rem 1rem 0}
+.day-emoji{font-size:28px;margin-bottom:3px;display:block;animation:bounce 2s ease-in-out infinite}
+.avatar{width:66px;height:66px;border-radius:50%;border:3px solid rgba(255,255,255,0.6);margin:0 auto 0.5rem;display:flex;align-items:center;justify-content:center;font-size:32px;animation:float 3s ease-in-out infinite;background:rgba(255,255,255,0.25)}
+.player-name{font-size:19px;font-weight:800;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,0.15);letter-spacing:-0.3px}
+.level-pill{display:inline-block;background:rgba(255,255,255,0.88);border-radius:99px;padding:3px 14px;font-size:11px;font-weight:700;margin-top:4px;color:#444}
+.xp-wrap{background:rgba(255,255,255,0.28);border-radius:99px;height:9px;margin:0.65rem 0 0.2rem;overflow:hidden;border:1px solid rgba(255,255,255,0.35)}
+.xp-fill{height:100%;border-radius:99px;background:rgba(255,255,255,0.9);transition:width 0.6s ease}
+.xp-hint{font-size:11px;color:rgba(255,255,255,0.85);text-align:right;font-weight:600}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0.75rem 1rem 0}
+.stat{background:rgba(255,255,255,0.22);border-radius:12px;padding:0.6rem;text-align:center;border:1px solid rgba(255,255,255,0.3)}
+.stat-n{font-size:18px;font-weight:800;color:#fff}
+.stat-l{font-size:10px;color:rgba(255,255,255,0.88);margin-top:1px;font-weight:600}
+
+.tab-bar{display:flex;gap:0;border-bottom:2px solid rgba(255,255,255,0.3);margin:0.75rem 1rem 0}
+.tab{flex:1;padding:0.7rem 0.5rem;text-align:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab.active{color:#fff;border-bottom-color:#fff}
+.tab:hover{color:rgba(255,255,255,0.9)}
+
+.tab-content{display:none;padding:0 1rem}
+.tab-content.active{display:block}
+
+.section-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.08em;margin:1.1rem 0 0.45rem;display:flex;align-items:center;gap:6px}
+
+.quest-card{background:rgba(255,255,255,0.93);border:1.5px solid rgba(255,255,255,0.7);border-radius:14px;padding:0.8rem 0.9rem;margin-bottom:0.45rem;display:flex;align-items:flex-start;gap:11px;cursor:pointer;transition:transform 0.15s;animation:fadeSlide 0.3s ease}
+.quest-card:hover{transform:translateY(-2px)}
+.quest-card:active{transform:scale(0.98)}
+.quest-card.done{opacity:0.5}
+.quest-card.vball{border-left:4px solid #4CAF50}
+.q-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.q-body{flex:1;min-width:0}
+.q-title{font-size:13px;font-weight:700;color:#222}
+.q-where{font-size:11px;color:#555;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-time{font-size:10px;color:#888;margin-top:1px}
+.q-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.xp-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,#a8edea,#fed6e3);color:#444}
+.xp-tag.done-tag{background:#eee;color:#999}
+.check{width:20px;height:20px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:all 0.25s;flex-shrink:0}
+.check.on{background:linear-gradient(135deg,#43e97b,#38f9d7);border-color:#43e97b;color:#fff;animation:pop 0.3s ease}
+
+.coffee-card{background:linear-gradient(135deg,rgba(255,237,180,0.96),rgba(255,204,112,0.92));border:1.5px solid rgba(255,200,80,0.6);border-radius:14px;padding:0.8rem 0.9rem;margin-bottom:0.45rem;display:flex;align-items:center;gap:11px;cursor:pointer;transition:transform 0.15s;animation:fadeSlide 0.3s ease}
+.coffee-card:hover{transform:translateY(-2px)}
+.coffee-card:active{transform:scale(0.98)}
+.coffee-card.done{opacity:0.5}
+.coffee-title{font-size:13px;font-weight:700;color:#5a3800}
+.coffee-sub{font-size:11px;color:#8a5a00;margin-top:1px}
+
+.hike-card{background:rgba(255,255,255,0.93);border:2px solid #5DCAA5;border-radius:14px;padding:0.8rem 0.9rem;margin-bottom:0.45rem;display:flex;align-items:flex-start;gap:11px;cursor:pointer;transition:transform 0.15s;animation:fadeSlide 0.3s ease}
+.hike-card:hover{transform:translateY(-2px)}
+.hike-card:active{transform:scale(0.98)}
+.hike-card.done{opacity:0.4}
+.h-body{flex:1;min-width:0}
+.h-title{font-size:13px;font-weight:700;color:#1a3a2a}
+.h-where{font-size:11px;color:#2a6a4a;margin-top:2px}
+.h-meta{font-size:10px;color:#4a8a6a;margin-top:1px}
+.h-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.h-xp{font-size:10px;font-weight:700;color:#085041;background:linear-gradient(135deg,#d4fc79,#96e6a1);padding:2px 7px;border-radius:99px}
+.h-xp.done-tag{background:#eee;color:#999}
+.h-check{width:20px;height:20px;border-radius:50%;border:2px solid #5DCAA5;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:all 0.25s;flex-shrink:0}
+.h-check.on{background:linear-gradient(135deg,#0F6E56,#1D9E75);border-color:#0F6E56;color:#fff;animation:pop 0.3s ease}
+
+.banner{border-radius:10px;padding:0.45rem 0.7rem;margin-bottom:0.5rem;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.3)}
+
+.day-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin:0.6rem 0 0.4rem}
+.day-btn{background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);border-radius:10px;padding:6px 16px;font-size:14px;cursor:pointer;color:#fff;transition:background 0.15s;font-family:inherit;font-weight:700}
+.day-btn:hover{background:rgba(255,255,255,0.4)}
+.day-btn:active{transform:scale(0.96)}
+.day-display{font-size:14px;font-weight:700;color:#fff;min-width:165px;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,0.12)}
+
+.toast{background:rgba(255,255,255,0.96);border:1.5px solid rgba(255,255,255,0.8);border-radius:14px;padding:0.65rem 1.1rem;font-size:12px;font-weight:700;color:#333;text-align:center;margin:0.75rem 0 0;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+
+.bonus-section{margin-bottom:0.55rem;background:rgba(255,255,255,0.15);border-radius:14px;border:1px solid rgba(255,255,255,0.22);overflow:hidden}
+.bonus-section-head{display:flex;align-items:center;justify-content:space-between;padding:0.65rem 0.9rem;cursor:pointer;transition:background 0.15s}
+.bonus-section-head:hover{background:rgba(255,255,255,0.12)}
+.bonus-section-head:active{background:rgba(255,255,255,0.2)}
+.bsh-label{font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px}
+.bsh-right{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.8)}
+.bsh-count{background:rgba(255,255,255,0.28);border-radius:99px;padding:1px 8px;font-size:11px;font-weight:700;color:#fff}
+.chevron{font-size:11px;color:rgba(255,255,255,0.7);transition:transform 0.2s}
+.chevron.open{transform:rotate(180deg)}
+
+.pill-grid{display:flex;flex-wrap:wrap;gap:6px;padding:0.45rem 0.7rem 0.75rem}
+.pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:99px;border:1.5px solid rgba(255,255,255,0.45);background:rgba(255,255,255,0.88);cursor:pointer;font-size:11px;font-weight:600;color:#333;transition:all 0.2s;white-space:nowrap}
+.pill:hover{background:#fff;transform:translateY(-1px)}
+.pill:active{transform:scale(0.96)}
+.pill.on{background:#fff;border-color:#fff;animation:pop 0.25s ease}
+.pill-icon{font-size:12px}
+.pill-xp{font-size:10px;font-weight:700;border-radius:99px;padding:1px 5px}
+.pill-xp.purple{color:#3C3489;background:#EEEDFE}
+.pill-xp.pink{color:#72243E;background:#FBEAF0}
+.pill-xp.coral{color:#712B13;background:#FAECE7}
+.pill-xp.amber{color:#633806;background:#FAEEDA}
+.pill-check{width:13px;height:13px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;flex-shrink:0;transition:all 0.2s}
+.pill-check.on{background:linear-gradient(135deg,#f093fb,#f5576c);border-color:#f093fb;color:#fff}
+
+.confetti{position:fixed;pointer-events:none;font-size:20px;animation:confettiFall 1s ease forwards;z-index:9999}
+
+/* TV Calendar */
+.xp-bank{background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.4);border-radius:14px;padding:0.75rem 1rem;margin:0.75rem 0 0.75rem;display:flex;align-items:center;justify-content:space-between}
+.xp-bank-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.88)}
+.xp-bank-val{font-size:22px;font-weight:800;color:#fff}
+.cal-week-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:0.75rem}
+.cal-week-display{font-size:13px;font-weight:700;color:#fff;text-align:center;min-width:160px}
+.cal-day-label{font-size:10px;font-weight:800;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.4rem;padding-left:2px}
+.cal-section{margin-bottom:1.1rem}
+.show-card{background:rgba(255,255,255,0.93);border-radius:14px;padding:0.7rem 0.85rem;margin-bottom:0.4rem;display:flex;align-items:center;gap:10px;animation:fadeSlide 0.3s ease}
+.show-card.locked{background:rgba(255,255,255,0.18);border:1.5px dashed rgba(255,255,255,0.4)}
+.show-card.unlocked{animation:unlockPop 0.4s ease}
+.show-net{font-size:9px;font-weight:800;border-radius:99px;padding:2px 7px;flex-shrink:0;letter-spacing:0.05em}
+.show-net.hbo{background:#9B59B6;color:#fff}
+.show-net.amc{background:#E74C3C;color:#fff}
+.show-body{flex:1;min-width:0}
+.show-title{font-size:13px;font-weight:700;color:#222}
+.show-title.lt{color:rgba(255,255,255,0.65)}
+.show-desc{font-size:11px;color:#666;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.show-desc.lt{color:rgba(255,255,255,0.45)}
+.show-type{font-size:10px;color:#999;margin-top:1px;font-weight:600}
+.show-type.lt{color:rgba(255,255,255,0.38)}
+.unlock-btn{background:linear-gradient(135deg,#f6d365,#fda085);border:none;border-radius:99px;padding:5px 11px;font-size:11px;font-weight:800;color:#5a2800;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:transform 0.15s;font-family:inherit}
+.unlock-btn:hover{transform:scale(1.05)}
+.unlock-btn:active{transform:scale(0.96)}
+.unlock-btn:disabled{background:#ddd;color:#aaa;cursor:default;transform:none}
+.unlock-badge{font-size:12px;color:#27ae60;font-weight:800;flex-shrink:0}
+.lock-icon{font-size:18px;flex-shrink:0}
+.tv-intro{font-size:12px;font-weight:600;color:rgba(255,255,255,0.82);text-align:center;padding:0.5rem 0 0.25rem}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<div class="header">
+  <span class="day-emoji" id="day-emoji">🌈</span>
+  <div class="avatar">🧀</div>
+  <div class="player-name">Dan's Daily Quest ✨</div>
+  <div class="level-pill" id="level-pill">Level 1 — Just woke up 😴</div>
+  <div style="padding:0 0.25rem">
+    <div class="xp-wrap"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    <div class="xp-hint"><span id="xp-cur">0</span> / <span id="xp-next">200</span> XP ⚡</div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="s-done">0 🎯</div><div class="stat-l">done today</div></div>
+  <div class="stat"><div class="stat-n" id="s-xp">0</div><div class="stat-l">XP today ⚡</div></div>
+  <div class="stat"><div class="stat-n" id="s-streak">0 🔥</div><div class="stat-l">day streak</div></div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" id="tab-quests" onclick="switchTab('quests')">🎯 Quests</div>
+  <div class="tab" id="tab-bonus" onclick="switchTab('bonus')">🎁 Bonuses</div>
+  <div class="tab" id="tab-tv" onclick="switchTab('tv')">📺 TV Vault</div>
+</div>
+
+<div class="tab-content active" id="content-quests" style="padding-top:0.25rem">
+  <div class="day-nav">
+    <button class="day-btn" id="prev-btn">◀</button>
+    <div class="day-display" id="day-display"></div>
+    <button class="day-btn" id="next-btn">▶</button>
+  </div>
+  <div class="section-label">☕ Morning ritual</div>
+  <div id="coffee-slot"></div>
+  <div class="section-label">🎯 Today's quests</div>
+  <div id="quest-slot"></div>
+  <div class="section-label">🏔️ Hike bonus — big points, big views</div>
+  <div id="hike-slot"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<div class="tab-content" id="content-bonus" style="padding-top:0.5rem">
+  <div id="bonus-slot"></div>
+</div>
+
+<div class="tab-content" id="content-tv" style="padding-top:0">
+  <div class="tv-intro">Spend your XP to unlock what's coming 🔓</div>
+  <div class="xp-bank">
+    <div>
+      <div class="xp-bank-label">💰 XP bank</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;margin-top:2px">earn more by doing quests!</div>
+    </div>
+    <div style="text-align:right">
+      <div class="xp-bank-val" id="xp-bank-val">0 XP</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600">available to spend</div>
+    </div>
+  </div>
+  <div class="cal-week-nav">
+    <button class="day-btn" id="cal-prev">◀</button>
+    <div class="cal-week-display" id="cal-week-label">This week 📅</div>
+    <button class="day-btn" id="cal-next">▶</button>
+  </div>
+  <div id="cal-content"></div>
+</div>
+
+</div>
+
+<script>
+const DAY_THEMES=[
+  {name:"Sunday",emoji:"🌸",bg:"linear-gradient(160deg,#f953c6 0%,#b91d73 100%)",pat:"radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)",patSize:"20px 20px"},
+  {name:"Monday",emoji:"🌊",bg:"linear-gradient(160deg,#4facfe 0%,#00f2fe 100%)",pat:"repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(255,255,255,0.12) 9px,rgba(255,255,255,0.12) 10px)",patSize:"20px 20px"},
+  {name:"Tuesday",emoji:"🌿",bg:"linear-gradient(160deg,#43e97b 0%,#38f9d7 100%)",pat:"radial-gradient(circle,rgba(255,255,255,0.18) 1px,transparent 1px)",patSize:"18px 18px"},
+  {name:"Wednesday",emoji:"🌈",bg:"linear-gradient(160deg,#fa709a 0%,#fee140 100%)",pat:"repeating-linear-gradient(-45deg,transparent,transparent 9px,rgba(255,255,255,0.12) 9px,rgba(255,255,255,0.12) 10px)",patSize:"20px 20px"},
+  {name:"Thursday",emoji:"⚡",bg:"linear-gradient(160deg,#a18cd1 0%,#fbc2eb 100%)",pat:"radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)",patSize:"22px 22px"},
+  {name:"Friday",emoji:"🎉",bg:"linear-gradient(160deg,#f6d365 0%,#fda085 100%)",pat:"repeating-linear-gradient(45deg,transparent,transparent 9px,rgba(255,255,255,0.12) 9px,rgba(255,255,255,0.12) 10px)",patSize:"20px 20px"},
+  {name:"Saturday",emoji:"🏖️",bg:"linear-gradient(160deg,#89f7fe 0%,#66a6ff 100%)",pat:"radial-gradient(circle,rgba(255,255,255,0.18) 1px,transparent 1px)",patSize:"18px 18px"},
+];
+
+const LEVELS=[
+  {min:0,max:199,label:"Level 1 — Just woke up 😴"},
+  {min:200,max:449,label:"Level 2 — Coffee's ready ☕"},
+  {min:450,max:749,label:"Level 3 — Curls out, world watch out 💁"},
+  {min:750,max:1099,label:"Level 4 — Thrift witch 🧙"},
+  {min:1100,max:1499,label:"Level 5 — Volley legend 🏐"},
+  {min:1500,max:1999,label:"Level 6 — SB local hero 🌴"},
+  {min:2000,max:99999,label:"Level 7 — Untouchable 👑"}
+];
+
+const TV_SHOWS=[
+  {id:"tv1",date:"2026-04-09",net:"hbo",title:"Hacks Season 5",desc:"Final season — Jean Smart & Hannah Einbinder back in Vegas",type:"Comedy series premiere",cost:40},
+  {id:"tv2",date:"2026-04-12",net:"hbo",title:"Euphoria Season 3",desc:"Zendaya is finally BACK. Three years later.",type:"Drama series premiere",cost:60},
+  {id:"tv3",date:"2026-04-12",net:"amc",title:"The Audacity",desc:"Silicon Valley satire with Zach Galifianakis & Sarah Goldberg",type:"Drama series premiere",cost:40},
+  {id:"tv4",date:"2026-04-14",net:"hbo",title:"The Dark Wizard",desc:"HBO Original fantasy film",type:"HBO Film",cost:30},
+  {id:"tv5",date:"2026-04-17",net:"hbo",title:"Smiling Friends Season 3B",desc:"Adult Swim's unhinged cartoon continues",type:"Animation",cost:25},
+  {id:"tv6",date:"2026-04-20",net:"amc",title:"Predator v Prey",desc:"BBC America nature series — apex predators in action",type:"Nature docuseries",cost:20},
+  {id:"tv7",date:"2026-04-22",net:"amc",title:"SisterS Season 2",desc:"Irish-Canadian comedy drama — binge drop on AMC+",type:"Comedy series",cost:30},
+  {id:"tv8",date:"2026-04-22",net:"hbo",title:"Half Man",desc:"Richard Gadd's follow-up to Baby Reindeer",type:"Limited series premiere",cost:50},
+  {id:"tv9",date:"2026-04-24",net:"hbo",title:"Marty Supreme",desc:"Timothée Chalamet as a ping-pong prodigy — A24 film",type:"Movie (A24)",cost:50},
+  {id:"tv10",date:"2026-04-24",net:"hbo",title:"Christy",desc:"Sydney Sweeney as a boxer — streaming premiere",type:"Movie",cost:40},
+  {id:"tv11",date:"2026-04-30",net:"hbo",title:"Hacks S5 Ep 2",desc:"Double-episode week for Hacks",type:"New episode",cost:20},
+  {id:"tv12",date:"2026-05-07",net:"amc",title:"The Terror Season 3",desc:"AMC's anthology horror series returns",type:"Horror series premiere",cost:40},
+  {id:"tv13",date:"2026-05-09",net:"hbo",title:"Song of the Samurai",desc:"New HBO animated series",type:"Animated series premiere",cost:30},
+  {id:"tv14",date:"2026-05-15",net:"amc",title:"In the Kitchen with Harry Hamlin",desc:"The 'King of Bolognese' hosts a cooking show",type:"New series",cost:20},
+  {id:"tv15",date:"2026-05-28",net:"hbo",title:"Hacks Series Finale",desc:"The final episode of Hacks ever. Cry now.",type:"Series finale ⚠️",cost:50},
+  {id:"tv16",date:"2026-06-07",net:"amc",title:"Interview with the Vampire Season 3",desc:"Anne Rice's Vampire Lestat — the saga continues",type:"Drama series premiere",cost:45},
+  {id:"tv17",date:"2026-06-26",net:"hbo",title:"Life, Larry & the Pursuit of Unhappiness",desc:"Larry David's new HBO comedy show",type:"Comedy series premiere",cost:40},
+  {id:"tv18",date:"2026-12-25",net:"hbo",title:"Harry Potter & the Philosopher's Stone",desc:"Brand new HBO adaptation — Christmas Day drop 🎄",type:"Series premiere",cost:80},
+  {id:"tv19",date:"2026-12-25",net:"hbo",title:"Dune: Prophecy Season 2",desc:"The Bene Gesserit prequel continues",type:"Sci-fi series premiere",cost:50},
+];
+
+const QUEST_POOL=[
+  {id:"bike1",icon:"⚡🚲",title:"E-bike to the beach",where:"📍 Leadbetter Beach · 801 Shoreline Dr",time:"~20 min ride from home",xp:80},
+  {id:"bike2",icon:"🌊⚡",title:"Coastal bike ride",where:"📍 Arroyo Burro Beach · 2981 Cliff Dr",time:"Great for a long spin",xp:80},
+  {id:"bike3",icon:"🌅⚡",title:"Ride to East Beach",where:"📍 East Beach · Cabrillo Blvd",time:"Flat, easy, gorgeous",xp:70},
+  {id:"walk1",icon:"🌊🪜",title:"Mesa Lane beach walk",where:"📍 Mesa Lane Beach · Mesa Ln stairs",time:"450 steps down — worth it!",xp:60},
+  {id:"walk2",icon:"🌿🌊",title:"Cliffside walk",where:"📍 Douglas Family Preserve · Medcliff Rd",time:"Ocean views the whole way",xp:55},
+  {id:"walk3",icon:"🌲🏃",title:"Elings Park loop",where:"📍 Elings Park · 1298 Las Positas Rd",time:"Trails + city + ocean views",xp:60},
+  {id:"thrift1",icon:"🛍️✨",title:"Thrift run",where:"📍 Urban Flea Market · 729 State St",time:"Open daily 11am",xp:65},
+  {id:"thrift2",icon:"👗💖",title:"Vintage hunting",where:"📍 Loveworn · 11 Anacapa St",time:"Open daily 11am",xp:65},
+  {id:"thrift3",icon:"🌟🛍️",title:"Your Vintage Neighbor",where:"📍 414 Chapala St B",time:"Wed–Sun 11am",xp:65},
+  {id:"thrift4",icon:"🦊🛍️",title:"The Vintage Fox",where:"📍 609 Chapala St",time:"Tue–Sat 11am",xp:65},
+  {id:"bowl1",icon:"🎵🎶",title:"Walk by the Bowl",where:"📍 Santa Barbara Bowl · 1122 N Milpas St",time:"Check the marquee! 👀",xp:40},
+  {id:"sun1",icon:"☀️😎",title:"Sit outside for 15 min",where:"📍 Your front step counts!",time:"Phone allowed 📱",xp:25},
+  {id:"market1",icon:"🥬🌸",title:"Farmers market stroll",where:"📍 500–700 State St",time:"Sat 8:30am · Tue 3pm",xp:55},
+  {id:"beach1",icon:"🏖️🌊",title:"Beach hang",where:"📍 East Beach · Cabrillo Blvd",time:"Just go sit there, it's beautiful",xp:55},
+  {id:"letter1",icon:"💌✉️",title:"Craft & deliver a letter for Mac & Maddie",where:"📍 Bike to Heather & Mark's",time:"Make something cute, then ride it over! 🚲",xp:90},
+];
+
+const VOLLEYBALL=[
+  {day:1,label:"🏐 Women's league night!",where:"📍 Your gym",time:"5:30–7:30 PM 💪",xp:100},
+  {day:2,label:"🏐 Coed league night!",where:"📍 Your gym",time:"5:30–7:30 PM 💪",xp:100},
+  {day:0,label:"🏐 Sunday morning vball!",where:"📍 Your gym",time:"7:00–10:00 AM ☀️",xp:100},
+];
+
+const BONUS_CATEGORIES=[
+  {id:"activities",label:"Fun stuff",icon:"🎉",color:"purple",items:[
+    {id:"b1",icon:"🌅",title:"Watch the sunset",xp:20},
+    {id:"b3",icon:"🌊",title:"Feet in the ocean",xp:30},
+    {id:"b4",icon:"⚡",title:"Ride somewhere new on the e-bike",xp:35},
+    {id:"b5",icon:"📸",title:"Photo of something beautiful",xp:15},
+    {id:"b6",icon:"🎶🚶",title:"Walk & listen to Harry Belafonte",xp:25},
+    {id:"b6b",icon:"🎵🚶",title:"Walk & listen to Shannon & the Clams",xp:25},
+    {id:"b6c",icon:"🎸🚶",title:"Walk & listen to The Growlers",xp:25},
+    {id:"b8",icon:"☕",title:"Go to a coffee shop",xp:25},
+    {id:"b9",icon:"🌿",title:"Touch some grass (literally)",xp:10},
+    {id:"b10",icon:"🛁",title:"Full self-care evening",xp:20},
+    {id:"b11",icon:"📞🚶",title:"Take a walk & chat on the phone",xp:30},
+    {id:"b13",icon:"💌",title:"Craft a letter or card for someone",xp:25},
+  ]},
+  {id:"errands",label:"Outside chores & errands",icon:"🛒",color:"amber",items:[
+    {id:"e1",icon:"🛒",title:"Grocery run",xp:25},
+    {id:"e2",icon:"🚗",title:"Wash the car",xp:30},
+    {id:"e3",icon:"⛽",title:"Fill up gas / charge the bike",xp:15},
+    {id:"e4",icon:"📦",title:"Drop off a resale haul",xp:35},
+    {id:"e5",icon:"💊",title:"Pharmacy run",xp:20},
+    {id:"e6",icon:"🏦",title:"Quick errand downtown",xp:20},
+    {id:"e7",icon:"🏷️",title:"List something to resell",xp:25},
+    {id:"e8",icon:"🧺",title:"Do laundry",xp:15},
+    {id:"e9",icon:"🌱",title:"Water the plants outside",xp:10},
+  ]},
+  {id:"local_squad",label:"Local squad 💕",icon:"🥳",color:"pink",items:[
+    {id:"s1",icon:"👯",title:"Hang out with Matt",xp:60},
+    {id:"s2",icon:"👨‍👩‍👧‍👦",title:"Hang out with Heather, Mark & the kids",xp:70},
+    {id:"s3",icon:"✨",title:"Hang out with Jana",xp:60},
+    {id:"s4",icon:"🌸",title:"Hang out with Leah",xp:60},
+    {id:"s5",icon:"💫",title:"Hang out with Jasmine",xp:60},
+    {id:"s6",icon:"🌻",title:"Hang out with Paige",xp:60},
+    {id:"s7",icon:"🎉",title:"Hang out with friends (any combo!)",xp:50},
+  ]},
+  {id:"distance_squad",label:"Long-distance love ✈️",icon:"🗺️",color:"coral",items:[
+    {id:"d1",icon:"🌴",title:"Hang out with Dana",xp:80},
+    {id:"d2",icon:"🌺",title:"Hang out with Deirdre",xp:80},
+    {id:"d3",icon:"☀️",title:"Hang out with Ashley",xp:80},
+    {id:"d4",icon:"🗺️",title:"Hang out with Lindsay",xp:120},
+  ]},
+];
+
+const HIKE_POOL=[
+  {id:"h1",icon:"🏔️",title:"Rattlesnake Canyon",where:"📍 Las Canoas Rd · Skofield Park trailhead",meta:"3 mi · 1,000 ft gain · shady creek 🌿",xp:120},
+  {id:"h2",icon:"💧",title:"Seven Falls",where:"📍 Tunnel Rd trailhead · past the Mission",meta:"4.4 mi · swimming holes at the end 🏊",xp:130},
+  {id:"h3",icon:"🌄",title:"Jesusita Trail",where:"📍 Tunnel Rd trailhead",meta:"3.5 mi · panoramic ocean + downtown views 🌊",xp:120},
+  {id:"h4",icon:"🦎",title:"Lizard's Mouth",where:"📍 West Camino Cielo · Gibraltar Rd",meta:"1 mi · wild boulders + harbor views 🪨",xp:100},
+  {id:"h5",icon:"🌊",title:"Douglas Preserve → Arroyo Burro",where:"📍 Medcliff Rd entrance",meta:"2 mi · cliff tops straight to the beach 🏖️",xp:90},
+  {id:"h6",icon:"🌸",title:"Santa Barbara Botanic Garden",where:"📍 1212 Mission Canyon Rd",meta:"5.5 mi of trails · redwoods + wildflowers 🌺",xp:85},
+  {id:"h7",icon:"🍊",title:"Tangerine Falls",where:"📍 Cold Springs trailhead · Montecito",meta:"3 mi · waterfall payoff at the end 💦",xp:115},
+  {id:"h8",icon:"♨️",title:"Hot Springs Trail",where:"📍 Hot Springs Rd · Montecito",meta:"3 mi · ends in natural hot spring pools 🛁",xp:125},
+  {id:"h9",icon:"🌲",title:"Cold Springs East Fork",where:"📍 Mountain Dr trailhead · Montecito",meta:"2.5 mi · creek crossings + canyon views 🏞️",xp:100},
+  {id:"h10",icon:"🥾",title:"Elings Park trails",where:"📍 1298 Las Positas Rd",meta:"2–3 mi · close to home, great warmup hike! 🌿",xp:75},
+];
+
+let state={offsetDays:0,totalXP:0,spentXP:0,streak:0,days:{},openSections:{},unlockedShows:{},calWeekOffset:0};
+let activeTab='quests';
+
+function switchTab(t){
+  activeTab=t;
+  ['quests','bonus','tv'].forEach(id=>{
+    document.getElementById('tab-'+id).classList.toggle('active',id===t);
+    document.getElementById('content-'+id).classList.toggle('active',id===t);
+  });
+  if(t==='tv')renderCalendar();
+}
+
+function getDateKey(o){const d=new Date();d.setDate(d.getDate()+o);return d.toISOString().slice(0,10);}
+function getDayOfWeek(o){const d=new Date();d.setDate(d.getDate()+o);return d.getDay();}
+function getDayLabel(o){
+  const d=new Date();d.setDate(d.getDate()+o);
+  const t=DAY_THEMES[d.getDay()];
+  const label=d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  if(o===0)return t.emoji+' Today — '+label;
+  if(o===-1)return'◀ Yesterday';
+  if(o===1)return'Tomorrow ▶';
+  return t.emoji+' '+label;
+}
+function seededRandom(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff};}
+function pickForDay(pool,count,seed){const rng=seededRandom(seed);return[...pool].sort(()=>rng()-0.5).slice(0,count);}
+
+function getDayData(o){
+  const key=getDateKey(o);const dow=getDayOfWeek(o);const seed=parseInt(key.replace(/-/g,''));
+  const vball=VOLLEYBALL.find(v=>v.day===dow);
+  return{key,dow,vball,mainQuests:pickForDay(QUEST_POOL,vball?1:2,seed),hikes:pickForDay(HIKE_POOL,2,seed+2)};
+}
+function getDayState(key){
+  if(!state.days[key])state.days[key]={coffee:false,quests:{},bonuses:{},hikes:{}};
+  return state.days[key];
+}
+function availableXP(){return Math.max(0,state.totalXP-state.spentXP);}
+
+function calcTodayXP(o){
+  const{key,vball,mainQuests,hikes}=getDayData(o);const ds=getDayState(key);
+  let xp=0;
+  if(ds.coffee)xp+=30;
+  if(vball&&ds.quests.vball)xp+=vball.xp;
+  mainQuests.forEach(q=>{if(ds.quests[q.id])xp+=q.xp});
+  Object.entries(ds.bonuses).forEach(([id,on])=>{if(on){const item=BONUS_CATEGORIES.flatMap(c=>c.items).find(i=>i.id===id);if(item)xp+=item.xp;}});
+  hikes.forEach(h=>{if(ds.hikes[h.id])xp+=h.xp});
+  return xp;
+}
+function calcTodayDone(o){
+  const{key,vball,mainQuests,hikes}=getDayData(o);const ds=getDayState(key);
+  let done=0;
+  if(ds.coffee)done++;if(vball&&ds.quests.vball)done++;
+  mainQuests.forEach(q=>{if(ds.quests[q.id])done++});
+  done+=Object.values(ds.bonuses).filter(Boolean).length;
+  hikes.forEach(h=>{if(ds.hikes[h.id])done++});
+  return done;
+}
+function getLevel(xp){return LEVELS.find(l=>xp>=l.min&&xp<=l.max)||LEVELS[LEVELS.length-1];}
+function getNextXP(xp){const i=LEVELS.findIndex(l=>xp>=l.min&&xp<=l.max);return i<LEVELS.length-1?LEVELS[i+1].min:LEVELS[LEVELS.length-1].max+1;}
+
+function applyTheme(){
+  const t=DAY_THEMES[getDayOfWeek(state.offsetDays)];
+  const app=document.getElementById('app');
+  app.style.background=t.bg;
+  let s=document.getElementById('theme-style');
+  if(!s){s=document.createElement('style');s.id='theme-style';document.head.appendChild(s);}
+  s.textContent=`.app::before{background-image:${t.pat};background-size:${t.patSize};}`;
+  document.getElementById('day-emoji').textContent=t.emoji;
+  document.body.style.background=t.bg.replace('160deg','180deg');
+}
+
+let toastTimer=null;
+const toastMsgs=[
+  xp=>`+${xp} XP! You actually left! 🎉🎊`,
+  xp=>`Quest complete! +${xp} XP ✨⚡`,
+  xp=>`Curls out, world shaking! +${xp} XP 💁🌟`,
+  xp=>`Dan's on the move! +${xp} XP 🏃💨`,
+  xp=>`SB won't know what hit it! +${xp} XP 🌴`,
+  xp=>`Trail boss energy! +${xp} XP 🏔️👑`,
+  xp=>`Squad activated! +${xp} XP 💕🥳`,
+  xp=>`Long-distance love! +${xp} XP ✈️💖`,
+  xp=>`Errand queen! +${xp} XP 👸✅`,
+  xp=>`Mac & Maddie are gonna LOVE it! +${xp} XP 💌`,
+];
+function fireToast(xp,msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg||toastMsgs[Math.floor(Math.random()*toastMsgs.length)](xp);
+  t.classList.add('show');clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+  spawnConfetti();
+}
+function spawnConfetti(){
+  const emojis=['🌟','✨','🎉','🌈','💫','🎊','⚡','🌸','💌','📺'];
+  for(let i=0;i<7;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='confetti';
+      c.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      c.style.left=Math.random()*90+'%';
+      c.style.top=(80+Math.random()*60)+'px';
+      c.style.animationDuration=(0.7+Math.random()*0.6)+'s';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(),1400);
+    },i*80);
+  }
+}
+
+function updateGlobal(){
+  const level=getLevel(state.totalXP);const nextXP=getNextXP(state.totalXP);
+  const pct=Math.min(100,Math.round((state.totalXP/nextXP)*100));
+  document.getElementById('level-pill').textContent=level.label;
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-cur').textContent=state.totalXP;
+  document.getElementById('xp-next').textContent=nextXP;
+  document.getElementById('s-done').textContent=calcTodayDone(state.offsetDays)+' 🎯';
+  document.getElementById('s-xp').textContent=calcTodayXP(state.offsetDays);
+  document.getElementById('s-streak').textContent=state.streak+' 🔥';
+  document.getElementById('day-display').textContent=getDayLabel(state.offsetDays);
+  const bv=document.getElementById('xp-bank-val');
+  if(bv)bv.textContent=availableXP()+' XP';
+}
+
+function renderCalendar(){
+  const bv=document.getElementById('xp-bank-val');if(bv)bv.textContent=availableXP()+' XP';
+  const today=new Date();
+  const start=new Date(today);start.setDate(today.getDate()+state.calWeekOffset*7);
+  const dates=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
+  const s=dates[0],e=dates[6];
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('cal-week-label').textContent=
+    state.calWeekOffset===0?'This week 📅':state.calWeekOffset===1?'Next week 📅':fmt(s)+' – '+fmt(e);
+  const container=document.getElementById('cal-content');container.innerHTML='';
+  let anyShown=false;
+  dates.forEach(d=>{
+    const ds=d.toISOString().slice(0,10);
+    const shows=TV_SHOWS.filter(s=>s.date===ds);
+    if(!shows.length)return;
+    anyShown=true;
+    const sec=document.createElement('div');sec.className='cal-section';
+    const dl=document.createElement('div');dl.className='cal-day-label';
+    dl.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    sec.appendChild(dl);
+    shows.forEach(show=>{
+      const unlocked=!!state.unlockedShows[show.id];
+      const card=document.createElement('div');
+      card.className='show-card '+(unlocked?'unlocked':'locked');
+      const nb=`<span class="show-net ${show.net}">${show.net.toUpperCase()}</span>`;
+      if(unlocked){
+        card.innerHTML=`${nb}<div class="show-body"><div class="show-title">${show.title}</div><div class="show-desc">${show.desc}</div><div class="show-type">${show.type}</div></div><span class="unlock-badge">✓ unlocked!</span>`;
+      } else {
+        const can=availableXP()>=show.cost;
+        card.innerHTML=`<span class="lock-icon">🔒</span><div class="show-body"><div class="show-title lt">${show.title}</div><div class="show-desc lt">${show.desc}</div><div class="show-type lt">${show.type}</div></div><button class="unlock-btn"${can?'':' disabled'}>🔓 ${show.cost} XP</button>`;
+        if(can){
+          card.querySelector('.unlock-btn').onclick=()=>{
+            state.spentXP+=show.cost;state.unlockedShows[show.id]=true;
+            fireToast(show.cost,`🎬 Unlocked: ${show.title}! 📺✨`);
+            renderCalendar();updateGlobal();
+          };
+        }
+      }
+      sec.appendChild(card);
+    });
+    container.appendChild(sec);
+  });
+  if(!anyShown){
+    const msg=document.createElement('div');
+    msg.style.cssText='text-align:center;padding:2rem 1rem;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600';
+    msg.textContent='No HBO or AMC premieres this week 📅';
+    container.appendChild(msg);
+  }
+}
+
+function renderDay(){
+  applyTheme();
+  const{key,vball,mainQuests,hikes}=getDayData(state.offsetDays);
+  const ds=getDayState(key);
+
+  // coffee
+  const cs=document.getElementById('coffee-slot');cs.innerHTML='';
+  const cc=document.createElement('div');cc.className='coffee-card'+(ds.coffee?' done':'');
+  cc.innerHTML=`<span style="font-size:22px">☕✨</span><div style="flex:1"><div class="coffee-title">Morning brew ritual ☕</div><div class="coffee-sub">Make your perfect cup first — always 🌅</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span style="font-size:10px;font-weight:700;color:#854F0B;background:linear-gradient(135deg,#ffecd2,#fcb69f);padding:2px 7px;border-radius:99px">+30 XP ⚡</span><div class="check${ds.coffee?' on':''}" style="${ds.coffee?'background:linear-gradient(135deg,#f6d365,#fda085);border-color:#fda085':'border-color:#EF9F27'}">${ds.coffee?'✓':''}</div></div>`;
+  cc.onclick=()=>{const was=ds.coffee;ds.coffee=!was;if(!was){state.totalXP+=30;state.streak=Math.max(state.streak,1);fireToast(30);}else state.totalXP=Math.max(0,state.totalXP-30);renderDay();updateGlobal();};
+  cs.appendChild(cc);
+
+  // quests
+  const qs=document.getElementById('quest-slot');qs.innerHTML='';
+  if(vball){
+    const done=!!ds.quests.vball;const vc=document.createElement('div');
+    vc.className='quest-card vball'+(done?' done':'');
+    vc.innerHTML=`<span class="q-icon">🏐</span><div class="q-body"><div class="q-title">${vball.label}</div><div class="q-where">${vball.where}</div><div class="q-time">${vball.time}</div></div><div class="q-right"><span class="xp-tag${done?' done-tag':''}">+${vball.xp} XP ⚡</span><div class="check${done?' on':''}">${done?'✓':''}</div></div>`;
+    vc.onclick=()=>{const was=!!ds.quests.vball;ds.quests.vball=!was;if(!was){state.totalXP+=vball.xp;fireToast(vball.xp);}else state.totalXP=Math.max(0,state.totalXP-vball.xp);renderDay();updateGlobal();};
+    qs.appendChild(vc);
+  }
+  mainQuests.forEach(q=>{
+    const done=!!ds.quests[q.id];const card=document.createElement('div');
+    card.className='quest-card'+(done?' done':'');
+    card.innerHTML=`<span class="q-icon">${q.icon}</span><div class="q-body"><div class="q-title">${q.title}</div><div class="q-where">${q.where}</div><div class="q-time">${q.time}</div></div><div class="q-right"><span class="xp-tag${done?' done-tag':''}">+${q.xp} XP ⚡</span><div class="check${done?' on':''}">${done?'✓':''}</div></div>`;
+    card.onclick=()=>{
+      const was=!!ds.quests[q.id];ds.quests[q.id]=!was;
+      const msg=q.id==='letter1'&&!was?`Mac & Maddie are gonna LOVE it! +${q.xp} XP 💌`:null;
+      if(!was){state.totalXP+=q.xp;fireToast(q.xp,msg);}else state.totalXP=Math.max(0,state.totalXP-q.xp);
+      renderDay();updateGlobal();
+    };
+    qs.appendChild(card);
+  });
+
+  // hikes
+  const hs=document.getElementById('hike-slot');hs.innerHTML='';
+  const hb=document.createElement('div');hb.className='banner';
+  hb.innerHTML='<span>🏔️</span> Two hikes rotate daily — complete one for MAJOR XP 💪';
+  hs.appendChild(hb);
+  hikes.forEach(h=>{
+    const done=!!ds.hikes[h.id];const hc=document.createElement('div');
+    hc.className='hike-card'+(done?' done':'');
+    hc.innerHTML=`<span style="font-size:20px;flex-shrink:0;margin-top:2px">${h.icon}</span><div class="h-body"><div class="h-title">${h.title}</div><div class="h-where">${h.where}</div><div class="h-meta">${h.meta}</div></div><div class="h-right"><span class="h-xp${done?' done-tag':''}">+${h.xp} XP 🌿</span><div class="h-check${done?' on':''}">${done?'✓':''}</div></div>`;
+    hc.onclick=()=>{const was=!!ds.hikes[h.id];ds.hikes[h.id]=!was;if(!was){state.totalXP+=h.xp;fireToast(h.xp);}else state.totalXP=Math.max(0,state.totalXP-h.xp);renderDay();updateGlobal();};
+    hs.appendChild(hc);
+  });
+
+  // bonuses
+  const bs=document.getElementById('bonus-slot');bs.innerHTML='';
+  BONUS_CATEGORIES.forEach(cat=>{
+    const checked=cat.items.filter(i=>!!ds.bonuses[i.id]);
+    const isOpen=!!state.openSections[cat.id];
+    const sec=document.createElement('div');sec.className='bonus-section';
+    const head=document.createElement('div');head.className='bonus-section-head';
+    head.innerHTML=`<span class="bsh-label"><span style="font-size:16px">${cat.icon}</span> ${cat.label}</span><span class="bsh-right">${checked.length?`<span class="bsh-count">✓ ${checked.length} done</span>`:''}<span class="chevron${isOpen?' open':''}">▼</span></span>`;
+    head.onclick=()=>{state.openSections[cat.id]=!state.openSections[cat.id];renderDay();updateGlobal();};
+    sec.appendChild(head);
+    if(isOpen){
+      const grid=document.createElement('div');grid.className='pill-grid';
+      cat.items.forEach(item=>{
+        const done=!!ds.bonuses[item.id];const pill=document.createElement('div');
+        pill.className='pill'+(done?' on':'');
+        pill.innerHTML=`<span class="pill-icon">${item.icon}</span><span style="font-size:11px">${item.title}</span><span class="pill-xp ${cat.color}">+${item.xp} XP</span><div class="pill-check${done?' on':''}">${done?'✓':''}</div>`;
+        pill.onclick=()=>{const was=!!ds.bonuses[item.id];ds.bonuses[item.id]=!was;if(!was){state.totalXP+=item.xp;fireToast(item.xp);}else state.totalXP=Math.max(0,state.totalXP-item.xp);renderDay();updateGlobal();};
+        grid.appendChild(pill);
+      });
+      sec.appendChild(grid);
+    }
+    bs.appendChild(sec);
+  });
+
+  updateGlobal();
+}
+
+document.getElementById('prev-btn').onclick=()=>{state.offsetDays--;renderDay();};
+document.getElementById('next-btn').onclick=()=>{state.offsetDays++;renderDay();};
+document.getElementById('cal-prev').onclick=()=>{state.calWeekOffset--;renderCalendar();};
+document.getElementById('cal-next').onclick=()=>{state.calWeekOffset++;renderCalendar();};
+
+renderDay();
+</script>
+</body>
+</html>
